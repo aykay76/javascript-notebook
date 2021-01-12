@@ -1,0 +1,133 @@
+<html>
+
+<head>
+  <title>Javascript Notebook</title>
+  <link rel="stylesheet" type="text/css" href="notebook.css" />
+  <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="splitter.css">  
+  <!-- <script src='jquery-3.4.0.min.js'></script> -->
+  <script>window.$ = window.jQuery = require('./jquery-3.4.0.min.js')</script>
+  <script src='bootstrap.min.js'></script>
+  <script src="splitter.js"></script>
+</head>
+
+<body>
+  <div class="splitter vertical">
+    <div id="first" class="first vertical">
+      <div id="notes" class="form-group" style="overflow-y: scroll; height: 100%;">
+      </div>
+    </div>
+    <div id="seperator" class="seperator vertical"></div>
+    <div id="second" class="second vertical">
+      <div class="form-group" style="height: 100%; width: 100%;">
+        <textarea id="console" class="monospace" style="width: 100%; height: 100%;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">    
+    var id = 1
+    var notes = new Array()
+
+    myConsoleLog = function(message) {
+      var console = $('#console')
+        var t = console.text()
+        t += message + '\n'
+        console.text(t)
+        console.scrollTop(console[0].scrollHeight)
+    }
+
+    $(function () {
+      initsplit()
+
+      // redirect the console
+      window.onerror = function (message, source, lineno, colno, error) {
+        myConsoleLog(message)
+      }
+
+      console.log = console.error = console.debug = function (o) {
+        myConsoleLog(o)
+      }
+
+      // load any existing notebook entries from local storage
+      var raw = window.localStorage.getItem("notes")
+      if (raw == null) {
+        notes = new Array()
+      }
+      else {
+        notes = JSON.parse(raw)
+      }
+
+      if (notes == null || notes.length == 0) {
+        appendNote(id, '', true)
+      }
+      else {
+        for (i = 0; i < notes.length; i++) {
+          var content = window.localStorage.getItem(`${notes[i]}`)
+          appendNote(notes[i], content, false)
+          id = Math.max(id, notes[i])
+        }
+
+        id++
+      }
+    })
+
+    appendNote = function (id, content, isNew) {
+      var newHtml = `<div id="${id}" style="padding: 5px;">`
+      newHtml += `<textarea id="src-${id}" class="monospace form-control" rows="10" style="font-size:x-small; padding: 2px;">${content}</textarea>`
+      newHtml += `<button id="btn-${id}" class="btn-sm btn-success" style="font-size: x-small; line-height: 1em;">Execute</button> &nbsp;`
+      newHtml += `<button id="del-${id}" class="btn-sm btn-danger" style="font-size: x-small; line-height: 1em;">Delete</button> &nbsp;`
+      newHtml += `<button id="add-${id}" class="btn-sm btn-primary" style="font-size: x-small; line-height: 1em;">Add section</button>`
+      newHtml += '</div>'
+      $('#notes').append(newHtml)
+
+      $('#notes').scrollTop($('#notes')[0].scrollHeight)
+
+      $(`#src-${id}`).on('change paste keyup', function () {
+        // put this on a timer
+        window.localStorage.setItem($(this).parent()[0].id, $(this).val())
+      })
+
+      $(`#btn-${id}`).click(function () {
+        var id = `#src-${$(this)[0].id.substring(4)}`
+        var s = $(id).val()
+        eval(s)
+      })
+
+      $(`#del-${id}`).click(function () {
+        var id = `${$(this)[0].id.substring(4)}`
+        deleteNote(id)
+      })
+
+      $(`#add-${id}`).click(function () {
+        appendNote(id, '', true)
+      })
+
+      if (isNew) {
+        window.localStorage.setItem(id, content)
+        notes.push(id)
+        window.localStorage.setItem("notes", JSON.stringify(notes))
+      }
+
+      id++
+    }
+
+    deleteNote = function (id) {
+      $(`#${id}`).remove()
+
+      notes = notes.filter(function (value, index, arr) {
+        return value != id
+      })
+
+      window.localStorage.removeItem(id)
+      window.localStorage.setItem("notes", JSON.stringify(notes))
+
+      if (notes.length == 0)
+      {
+        appendNote(id, '', true)
+      }
+    }
+  </script>
+</body>
+
+</html>

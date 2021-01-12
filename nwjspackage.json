@@ -1,0 +1,14 @@
+{
+    "name": "javascript-notebook",
+    "main": "notebook.html",
+    "scripts": {
+      "release": "/Applications/nwjs.app/Contents/MacOS/nwjs .",
+      "start": "~/nwjs-sdk-v0.37.4-x64/nwjs.app/Contents/MacOS/nwjs ."
+    },
+    "window": {
+      "width": 1920,
+      "height": 1080,
+      "toolbar": true
+    }
+  }
+  
